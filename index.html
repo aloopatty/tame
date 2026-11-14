@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#090f1d"><meta name="description" content="Ludo Glass Arena — offline local multiplayer Ludo"><title>Ludo Glass Arena</title><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="app" class="arena">
+  <header class="topbar"><div class="brand-mark">✦</div><div><div class="brand">LUDO <span>GLASS ARENA</span></div><div class="subbrand">PASS · PLAY · CONQUER</div></div><div class="top-actions"><button id="soundBtn" class="icon-btn" aria-label="Toggle sound">♫</button><button id="rulesBtn" class="icon-btn" aria-label="Rules">?</button><button id="pauseBtn" class="icon-btn" aria-label="Pause">Ⅱ</button></div></header>
+  <section class="game-layout">
+    <section class="player-hud hud-red" data-player="0"><div class="hud-head"><span class="player-dot"></span><span class="player-name">RED</span><span class="turn-clock">15</span></div><div class="hud-foot"><span class="stat">HOME <b class="home-count">0/4</b></span><span class="stat">CAP <b class="capture-count">0</b></span><button class="roll-btn" aria-label="Roll red die"><span class="die-face">⚄</span><small>ROLL</small></button></div></section>
+    <section class="player-hud hud-green" data-player="1"><div class="hud-head"><span class="player-dot"></span><span class="player-name">GREEN</span><span class="turn-clock">15</span></div><div class="hud-foot"><span class="stat">HOME <b class="home-count">0/4</b></span><span class="stat">CAP <b class="capture-count">0</b></span><button class="roll-btn" aria-label="Roll green die"><span class="die-face">⚄</span><small>ROLL</small></button></div></section>
+    <section class="board-shell"><div id="board" class="board" aria-label="Ludo board"><div class="board-center"><div class="center-diamond"><span>✦</span></div></div></div><div class="board-caption"><span>✦ SAFE SQUARE</span><span id="turnLabel">RED TO PLAY</span></div></section>
+    <section class="player-hud hud-blue" data-player="3"><div class="hud-head"><span class="player-dot"></span><span class="player-name">BLUE</span><span class="turn-clock">15</span></div><div class="hud-foot"><span class="stat">HOME <b class="home-count">0/4</b></span><span class="stat">CAP <b class="capture-count">0</b></span><button class="roll-btn" aria-label="Roll blue die"><span class="die-face">⚄</span><small>ROLL</small></button></div></section>
+    <section class="player-hud hud-yellow" data-player="2"><div class="hud-head"><span class="player-dot"></span><span class="player-name">YELLOW</span><span class="turn-clock">15</span></div><div class="hud-foot"><span class="stat">HOME <b class="home-count">0/4</b></span><span class="stat">CAP <b class="capture-count">0</b></span><button class="roll-btn" aria-label="Roll yellow die"><span class="die-face">⚄</span><small>ROLL</small></button></div></section>
+  </section>
+  <footer class="footer"><span id="statusText">Roll a six to bring a token onto the track.</span><button id="newGameBtn" class="text-btn">NEW GAME ↻</button></footer>
+</main>
+<div id="overlay" class="overlay hidden"><section class="dialog"><button class="close-btn" id="closeDialog">×</button><div id="dialogContent"></div></section></div>
+<script src="app.js"></script><script>if('serviceWorker' in navigator) addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));</script>
+</body></html>
