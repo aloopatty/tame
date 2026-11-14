@@ -38,9 +38,9 @@ public class LudoView extends View {
     private float boardX,boardY,boardSize,cell,headerBottom;
     private final RectF[] huds=new RectF[4],rollRects=new RectF[4],playerSelectors=new RectF[3];
     private RectF pauseRect=new RectF(),soundRect=new RectF(),rulesRect=new RectF();
-    private float animatedScale=1f;
+    private float animatedScale=1f,diceRotation=0f,confettiPhase=0f; private boolean rolling=false,showRules=false;
     private ToneGenerator tone;
-    private final Runnable countdown=new Runnable(){@Override public void run(){if(paused||winner||animating)return;seconds--;if(seconds<=0){dice=0;message="Time expired — turn passed";nextTurn();invalidate();return;}invalidate();if(!paused&&!winner)handler.postDelayed(this,1000);}};
+    private final Runnable countdown=new Runnable(){@Override public void run(){if(paused||winner)return;if(animating){handler.postDelayed(this,1000);return;}seconds--;if(seconds<=0){dice=0;message="Time expired — turn passed";nextTurn();return;}invalidate();handler.postDelayed(this,1000);}};
     public LudoView(Context context){super(context);setLayerType(View.LAYER_TYPE_SOFTWARE,null);try{tone=new ToneGenerator(AudioManager.STREAM_MUSIC,35);}catch(Exception ignored){}reset();}
     private float dp(float v){return v*getResources().getDisplayMetrics().density;}
     public void reset(){for(int a=0;a<4;a++){captures[a]=0;sixRolls[a]=0;for(int b=0;b<4;b++)tokens[a][b]=-1;}turn=0;dice=0;sixChain=0;seconds=15;paused=false;winner=false;animating=false;message="Roll a six to leave your base";handler.removeCallbacks(countdown);handler.postDelayed(countdown,1000);invalidate();}
@@ -54,7 +54,7 @@ public class LudoView extends View {
         boardSize=Math.min(w-dp(18),available);cell=boardSize/15f;boardX=(w-boardSize)/2f;boardY=(h-boardSize)/2f+dp(4);
         drawBoard(c);
         drawHud(c,w,hudH,gap);
-        if(paused||winner)drawOverlay(c,w,h);
+        if(paused||winner||showRules)drawOverlay(c,w,h);
     }
     private void drawHeader(Canvas c,float w){text(c,"LUDO  GLASS ARENA",w/2,dp(23),dp(14),Color.rgb(220,235,252),true);text(c,"LOCAL PASS & PLAY",w/2,dp(39),dp(8),Color.rgb(116,143,174),true);
         float sw=dp(39),gap=dp(6),total=sw*3+gap*2,sx=(w-total)/2f,top=dp(47);text(c,"PLAYERS",sx-dp(27),top+dp(24),dp(8),Color.rgb(130,153,180),true);
@@ -85,20 +85,33 @@ public class LudoView extends View {
     private int movingPiece=-1;
     private void drawHud(Canvas c,float w,float hh,float gap){float margin=dp(9),top=dp(80),bottom=getHeight()-dp(12);float left=margin,right=w-margin,boardTop=boardY,boardBottom=boardY+boardSize;
         RectF[] rs={new RectF(left,top,left+(w-3*margin)/2,Math.min(boardTop-dp(5),top+hh)),new RectF(right-(w-3*margin)/2,top,right,Math.min(boardTop-dp(5),top+hh)),new RectF(left,Math.max(boardBottom+dp(5),bottom-hh),left+(w-3*margin)/2,bottom),new RectF(right-(w-3*margin)/2,Math.max(boardBottom+dp(5),bottom-hh),right,bottom)};
-        for(int i=0;i<4;i++){huds[i]=rs[i];RectF r=rs[i];boolean active=i==turn;fill(c,active?Color.rgb(31,49,72):Color.rgb(17,29,46),r.left,r.top,r.right,r.bottom,dp(12));stroke(c,active?colors[i]:Color.rgb(51,70,94),active?dp(2):dp(1),r.left,r.top,r.right,r.bottom,dp(12));float pad=dp(9);text(c,names[i],r.left+pad+dp(20),r.top+dp(19),dp(10),colors[i],true);text(c,(i==turn?seconds+"s":""),r.right-pad-dp(16),r.top+dp(19),dp(9),Color.WHITE,true);
+        for(int slot=0;slot<4;slot++){int i=new int[]{0,1,3,2}[slot];huds[i]=rs[slot];RectF r=rs[slot];boolean active=i==turn;fill(c,active?Color.rgb(31,49,72):Color.rgb(17,29,46),r.left,r.top,r.right,r.bottom,dp(12));stroke(c,active?colors[i]:Color.rgb(51,70,94),active?dp(2):dp(1),r.left,r.top,r.right,r.bottom,dp(12));float pad=dp(9);text(c,names[i],r.left+pad+dp(20),r.top+dp(19),dp(10),colors[i],true);text(c,(i==turn?seconds+"s":""),r.right-pad-dp(16),r.top+dp(19),dp(9),Color.WHITE,true);
             text(c,"HOME "+homeCount(i)+"/4",r.left+pad+dp(18),r.top+dp(36),dp(8),Color.rgb(178,197,218),false);text(c,"CAP "+captures[i]+"  ·  6s "+sixRolls[i],r.left+pad+dp(50),r.top+dp(53),dp(8),Color.rgb(178,197,218),false);
-            RectF d=new RectF(r.right-dp(42),r.top+dp(8),r.right-dp(7),r.bottom-dp(8));rollRects[i]=d;fill(c,active?colors[i]:Color.rgb(47,65,87),d.left,d.top,d.right,d.bottom,dp(9));text(c,active&&dice>0?dieGlyph(dice):"⚄",d.centerX(),d.centerY()+dp(6),dp(20),Color.WHITE,true);if(active)text(c,"ROLL",d.centerX(),d.bottom-dp(2),dp(7),Color.WHITE,true);
+            RectF d=new RectF(r.right-dp(42),r.top+dp(8),r.right-dp(7),r.bottom-dp(8));rollRects[i]=d;fill(c,active?colors[i]:Color.rgb(47,65,87),d.left,d.top,d.right,d.bottom,dp(9));drawDie(c,d,active&&dice>0?dice:0,active);if(active)text(c,"ROLL",d.centerX(),d.bottom-dp(2),dp(7),Color.WHITE,true);
         }
         text(c,message,w/2,boardY+boardSize+dp(15),dp(9),Color.rgb(169,191,216),true);
     }
     private int homeCount(int player){int n=0;for(int v:tokens[player])if(v==57)n++;return n;}
-    private String dieGlyph(int n){return new String[]{"","⚀","⚁","⚂","⚃","⚄","⚅"}[n];}
+    private String dieGlyph(int n){return String.valueOf(n);}
+    private void drawDie(Canvas c,RectF r,int value,boolean active){
+        c.save();c.rotate(diceRotation,r.centerX(),r.centerY());
+        p.setStyle(Paint.Style.FILL);p.setColor(Color.BLACK);p.setShadowLayer(dp(5),0,dp(3),0x99000000);
+        RectF d=new RectF(r.left+dp(2),r.top+dp(3),r.right-dp(2),r.bottom-dp(3));c.drawRoundRect(d,dp(8),dp(8),p);p.clearShadowLayer();
+        p.setShader(new android.graphics.LinearGradient(d.left,d.top,d.right,d.bottom,active?Color.rgb(255,255,255):Color.rgb(100,119,143),active?colors[turn]:Color.rgb(45,62,83),android.graphics.Shader.TileMode.CLAMP));c.drawRoundRect(d,dp(8),dp(8),p);p.setShader(null);
+        p.setColor(0xCCFFFFFF);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(dp(1));c.drawRoundRect(d,dp(8),dp(8),p);p.setStyle(Paint.Style.FILL);
+        if(value==0){text(c,"?",d.centerX(),d.centerY()+dp(6),dp(19),Color.WHITE,true);}else{
+            float rr=dp(2.4f),cx=d.centerX(),cy=d.centerY(),off=d.width()*.22f;
+            int[][] dots={{},{4},{0,8},{0,4,8},{0,2,6,8},{0,2,4,6,8},{0,2,3,5,6,8}};
+            for(int v:dots[value]){float dx=(v%3-1)*off,dy=(v/3-1)*off;p.setColor(Color.WHITE);c.drawCircle(cx+dx,cy+dy,rr,p);}
+        }c.restore();
+    }
     private float[] xy(int row,int col){return new float[]{boardX+(col+.5f)*cell,boardY+(row+.5f)*cell};}
     private boolean isSafe(int v){for(int a:safe)if(a==v)return true;return false;}
     private int global(int player,int progress){return(starts[player]+progress)%52;}
     private float[] tokenPosition(int player,int piece){int v=tokens[player][piece];if(v<0){int[][] b=bases[player];return xy(b[piece][0],b[piece][1]);}if(v==57)return xy(7,7);if(v>=52)return xy(lanes[player][Math.min(5,v-52)][0],lanes[player][Math.min(5,v-52)][1]);int g=global(player,v);return xy(path[g][0],path[g][1]);}
     private ArrayList<Integer> legal(int player){ArrayList<Integer> a=new ArrayList<>();for(int j=0;j<4;j++){int v=tokens[player][j];if(v==57)continue;if(v<0?dice==6:v+dice<=57)a.add(j);}return a;}
-    private void rollDice(){if(paused||winner||animating||dice!=0)return;int n=1+random.nextInt(6);dice=n;if(n==6){sixRolls[turn]++;sixChain++;}else sixChain=0;if(sixChain>=3){dice=0;sixChain=0;message="Three sixes — turn forfeited";nextTurn();return;}if(legal(turn).isEmpty()){message="No legal move";if(n!=6)nextTurn();else dice=0;}}
+    private void rollDice(){if(paused||winner||animating||rolling||dice!=0)return;rolling=true;ValueAnimator tumble=ValueAnimator.ofFloat(0f,720f);tumble.setDuration(620);tumble.setInterpolator(new android.view.animation.DecelerateInterpolator());tumble.addUpdateListener(a->{diceRotation=(float)a.getAnimatedValue();invalidate();});tumble.addListener(new android.animation.AnimatorListenerAdapter(){@Override public void onAnimationEnd(android.animation.Animator a){rolling=false;diceRotation=0;resolveRoll();}});tumble.start();}
+    private void resolveRoll(){int n=1+random.nextInt(6);dice=n;playStepSound();if(n==6){sixRolls[turn]++;sixChain++;}else sixChain=0;if(sixChain>=3){dice=0;sixChain=0;message="Three sixes — turn forfeited";nextTurn();return;}if(legal(turn).isEmpty()){message="No legal move";if(n!=6)nextTurn();else dice=0;}}
     private void playStepSound(){if(sound&&tone!=null)try{tone.startTone(ToneGenerator.TONE_PROP_BEEP,35);}catch(Exception ignored){}}
     private void moveToken(final int piece){if(dice==0||animating||!legal(turn).contains(piece))return;final int player=turn,pips=dice;dice=0;animating=true;movingPiece=piece;int old=tokens[player][piece];final int steps=old<0?1:pips;final int start=old<0?-1:old;
         runStep(player,piece,start,steps,0,pips);
@@ -110,14 +123,26 @@ public class LudoView extends View {
     }
     private void finishMove(int player,int piece,int pips){int dest=tokens[player][piece];boolean captured=false;if(dest<52){int square=global(player,dest);if(!isSafe(square)){for(int q=0;q<players;q++)if(q!=player)for(int j=0;j<4;j++){int v=tokens[q][j];if(v>=0&&v<52&&global(q,v)==square){tokens[q][j]=-1;captures[player]++;captured=true;}}}}
         boolean won=true;for(int v:tokens[player])if(v!=57)won=false;animating=false;movingPiece=-1;animatedScale=1f;
-        if(won){winner=true;message=names[player]+" WINS!";handler.removeCallbacks(countdown);}else if(pips==6||captured){turn=player;seconds=15;message=captured?"Captured! Roll again":"Six! Roll again";}else{message="";nextTurn();}invalidate();
+        if(won){winner=true;message=names[player]+" WINS!";handler.removeCallbacks(countdown);}else if(pips==6||captured){turn=player;seconds=15;message=captured?"Captured! Roll again":"Six! Roll again";handler.removeCallbacks(countdown);handler.postDelayed(countdown,1000);}else{message="";nextTurn();}invalidate();
     }
     private void nextTurn(){dice=0;sixChain=0;turn=(turn+1)%players;seconds=15;handler.removeCallbacks(countdown);if(!paused&&!winner)handler.postDelayed(countdown,1000);}
-    private void drawOverlay(Canvas c,float w,float h){fill(c,alpha(Color.BLACK,205),0,0,w,h,0);float l=dp(25),r=w-dp(25),t=h/2-dp(78),b=h/2+dp(78);fill(c,Color.rgb(24,39,60),l,t,r,b,dp(18));stroke(c,Color.rgb(103,142,184),dp(1),l,t,r,b,dp(18));text(c,winner?"🏆  "+names[turn]+" WINS":"GAME PAUSED",w/2,t+dp(42),dp(20),Color.WHITE,true);text(c,winner?"All four tokens reached home":"The turn timer is paused",w/2,t+dp(70),dp(11),Color.rgb(184,205,229),false);text(c,winner?"TAP TO PLAY AGAIN":"TAP RESUME TO CONTINUE",w/2,t+dp(111),dp(10),Color.rgb(139,190,244),true);}
-    @Override public boolean onTouchEvent(MotionEvent e){if(e.getAction()!=MotionEvent.ACTION_UP)return true;float x=e.getX(),y=e.getY();if(winner){reset();return true;}if(paused){paused=false;message="Game resumed";seconds=15;handler.postDelayed(countdown,1000);invalidate();return true;}
+    private void drawOverlay(Canvas c,float w,float h){
+        fill(c,alpha(Color.BLACK,215),0,0,w,h,0);float l=dp(22),r=w-dp(22),t=h/2-dp(showRules?145:82),b=h/2+dp(showRules?145:82);
+        fill(c,Color.rgb(20,34,54),l,t,r,b,dp(20));stroke(c,Color.rgb(113,157,205),dp(1.3f),l,t,r,b,dp(20));
+        if(showRules){
+            text(c,"HOW TO PLAY",w/2,t+dp(31),dp(18),Color.WHITE,true);
+            String[] lines={"Roll a 6 to release a token from base","Move clockwise; exact roll to reach home","A 6 grants another roll","Capture opponents on non-safe squares","Star squares are safe from capture","Three consecutive 6s forfeit your turn","First player to bring all 4 tokens home wins","Each turn has 15 seconds"};
+            for(int i=0;i<lines.length;i++)text(c,lines[i],w/2,t+dp(62+i*dp(21)),dp(9),Color.rgb(197,215,237),false);
+            text(c,"TAP ANYWHERE TO CLOSE",w/2,b-dp(19),dp(9),Color.rgb(139,190,244),true);return;
+        }
+        text(c,winner?"✦  "+names[turn]+" WINS":"GAME PAUSED",w/2,t+dp(43),dp(20),Color.WHITE,true);
+        text(c,winner?"All four tokens reached home":"The turn timer is paused",w/2,t+dp(73),dp(11),Color.rgb(184,205,229),false);
+        text(c,winner?"TAP TO PLAY AGAIN":"TAP RESUME TO CONTINUE",w/2,t+dp(119),dp(10),Color.rgb(139,190,244),true);
+    }
+    @Override public boolean onTouchEvent(MotionEvent e){if(e.getAction()!=MotionEvent.ACTION_UP)return true;float x=e.getX(),y=e.getY();if(winner){reset();return true;}if(showRules){showRules=false;invalidate();return true;}if(paused){paused=false;message="Game resumed";seconds=15;handler.postDelayed(countdown,1000);invalidate();return true;}
         for(int i=0;i<3;i++)if(playerSelectors[i]!=null&&playerSelectors[i].contains(x,y)){players=i+2;reset();return true;}
-        if(pauseRect.contains(x,y)){paused=true;handler.removeCallbacks(countdown);invalidate();return true;}if(soundRect.contains(x,y)){sound=!sound;invalidate();return true;}if(rulesRect.contains(x,y)){message="6 to exit base · exact roll home · stars are safe";invalidate();return true;}
-        if(animating)return true;
+        if(pauseRect.contains(x,y)){paused=true;handler.removeCallbacks(countdown);invalidate();return true;}if(soundRect.contains(x,y)){sound=!sound;invalidate();return true;}if(rulesRect.contains(x,y)){showRules=true;invalidate();return true;}
+        if(animating||rolling)return true;
         for(int i=0;i<players;i++)if(rollRects[i]!=null&&rollRects[i].contains(x,y)&&i==turn){if(dice==0)rollDice();else{ArrayList<Integer> options=legal(turn);if(options.size()==1)moveToken(options.get(0));else message="Tap a highlighted token";}invalidate();return true;}
         if(dice>0){for(int j=0;j<4;j++){float[] q=tokenPosition(turn,j);if(legal(turn).contains(j)&&Math.hypot(x-q[0],y-q[1])<cell*.82f){moveToken(j);invalidate();return true;}}}
         invalidate();return true;
