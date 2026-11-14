@@ -38,7 +38,7 @@ public class LudoView extends View {
     private float boardX,boardY,boardSize,cell,headerBottom;
     private final RectF[] huds=new RectF[4],rollRects=new RectF[4],playerSelectors=new RectF[3];
     private RectF pauseRect=new RectF(),soundRect=new RectF(),rulesRect=new RectF();
-    private float animatedScale=1f,diceRotation=0f,confettiPhase=0f; private boolean rolling=false,showRules=false;
+    private float animatedScale=1f,diceRotation=0f,confettiPhase=0f,moveOffsetX=0f,moveOffsetY=0f; private boolean rolling=false,showRules=false;
     private ToneGenerator tone;
     private final Runnable countdown=new Runnable(){@Override public void run(){if(paused||winner)return;if(animating){handler.postDelayed(this,1000);return;}seconds--;if(seconds<=0){dice=0;message="Time expired — turn passed";nextTurn();return;}invalidate();handler.postDelayed(this,1000);}};
     public LudoView(Context context){super(context);setLayerType(View.LAYER_TYPE_SOFTWARE,null);try{tone=new ToneGenerator(AudioManager.STREAM_MUSIC,35);}catch(Exception ignored){}reset();}
@@ -78,14 +78,14 @@ public class LudoView extends View {
     }
     private void drawTokens(Canvas c){for(int a=0;a<players;a++)for(int b=0;b<4;b++){float[] q=tokenPosition(a,b);int n=0,index=0;for(int k=0;k<players;k++)for(int j=0;j<4;j++){if(k==a&&j==b)index=n;if(tokens[k][j]>=0&&tokens[k][j]<57){float[] z=tokenPosition(k,j);if(Math.abs(z[0]-q[0])<1&&Math.abs(z[1]-q[1])<1)n++;}}
             float ox=0,oy=0;if(n>1){int cols=2;ox=((index%cols)-.5f)*cell*.34f;oy=((index/cols)-.5f)*cell*.34f;}
-            float r=cell*(n>1?.23f:.34f)*((animating&&a==turn&&b==movingPiece)?animatedScale:1f);float tx=q[0]+ox,ty=q[1]+oy;
+            float r=cell*(n>1?.23f:.34f)*((animating&&a==turn&&b==movingPiece)?animatedScale:1f);float tx=q[0]+ox,ty=q[1]+oy;if(animating&&a==turn&&b==movingPiece){tx+=moveOffsetX;ty+=moveOffsetY;}
             p.setColor(alpha(Color.BLACK,110));c.drawCircle(tx+dp(1),ty+dp(2),r*1.12f,p);p.setColor(colors[a]);c.drawCircle(tx,ty,r,p);p.setColor(Color.WHITE);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(dp(1.5f));c.drawCircle(tx,ty,r,p);p.setStyle(Paint.Style.FILL);p.setColor(alpha(Color.WHITE,180));c.drawCircle(tx-r*.25f,ty-r*.28f,r*.22f,p);
             if(a==turn&&dice>0&&legal(a).contains(b)){p.setColor(Color.WHITE);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(dp(2));c.drawCircle(tx,ty,r*1.3f,p);p.setStyle(Paint.Style.FILL);}
         }}
     private int movingPiece=-1;
     private void drawHud(Canvas c,float w,float hh,float gap){float margin=dp(9),top=dp(80),bottom=getHeight()-dp(12);float left=margin,right=w-margin,boardTop=boardY,boardBottom=boardY+boardSize;
         RectF[] rs={new RectF(left,top,left+(w-3*margin)/2,Math.min(boardTop-dp(5),top+hh)),new RectF(right-(w-3*margin)/2,top,right,Math.min(boardTop-dp(5),top+hh)),new RectF(left,Math.max(boardBottom+dp(5),bottom-hh),left+(w-3*margin)/2,bottom),new RectF(right-(w-3*margin)/2,Math.max(boardBottom+dp(5),bottom-hh),right,bottom)};
-        for(int slot=0;slot<4;slot++){int i=new int[]{0,1,3,2}[slot];huds[i]=rs[slot];RectF r=rs[slot];boolean active=i==turn;fill(c,active?Color.rgb(31,49,72):Color.rgb(17,29,46),r.left,r.top,r.right,r.bottom,dp(12));stroke(c,active?colors[i]:Color.rgb(51,70,94),active?dp(2):dp(1),r.left,r.top,r.right,r.bottom,dp(12));float pad=dp(9);text(c,names[i],r.left+pad+dp(20),r.top+dp(19),dp(10),colors[i],true);text(c,(i==turn?seconds+"s":""),r.right-pad-dp(16),r.top+dp(19),dp(9),Color.WHITE,true);
+        for(int slot=0;slot<4;slot++){int i=new int[]{0,1,3,2}[slot];huds[i]=rs[slot];RectF r=rs[slot];boolean active=i==turn;fill(c,active?Color.rgb(31,49,72):Color.rgb(17,29,46),r.left,r.top,r.right,r.bottom,dp(12));stroke(c,Color.argb(52,255,255,255),dp(1),r.left,r.top,r.right,r.bottom,dp(12));stroke(c,Color.argb(105,0,0,0),dp(1),r.left+dp(1),r.top+dp(1),r.right-dp(1),r.bottom-dp(1),dp(11));if(active)stroke(c,colors[i],dp(1.5f),r.left,r.top,r.right,r.bottom,dp(12));float pad=dp(9);if(active){p.setColor(alpha(colors[i],26));p.setShadowLayer(dp(15),0,0,colors[i]);c.drawRoundRect(r,dp(12),dp(12),p);p.clearShadowLayer();}text(c,names[i],r.left+pad+dp(20),r.top+dp(19),dp(10),colors[i],true);text(c,(i==turn?seconds+"s":""),r.right-pad-dp(16),r.top+dp(19),dp(9),Color.WHITE,true);
             text(c,"HOME "+homeCount(i)+"/4",r.left+pad+dp(18),r.top+dp(36),dp(8),Color.rgb(178,197,218),false);text(c,"CAP "+captures[i]+"  ·  6s "+sixRolls[i],r.left+pad+dp(50),r.top+dp(53),dp(8),Color.rgb(178,197,218),false);
             RectF d=new RectF(r.right-dp(42),r.top+dp(8),r.right-dp(7),r.bottom-dp(8));rollRects[i]=d;fill(c,active?colors[i]:Color.rgb(47,65,87),d.left,d.top,d.right,d.bottom,dp(9));drawDie(c,d,active&&dice>0?dice:0,active);if(active)text(c,"ROLL",d.centerX(),d.bottom-dp(2),dp(7),Color.WHITE,true);
         }
@@ -118,11 +118,10 @@ public class LudoView extends View {
     }
     private void runStep(final int player,final int piece,final int start,final int total,final int index,final int pips){
         if(index>=total){finishMove(player,piece,pips);return;}
-        int next=start<0?0:start+index+1;tokens[player][piece]=next;
-        ValueAnimator animator=ValueAnimator.ofFloat(.88f,1.16f,1f);animator.setDuration(145);animator.setInterpolator(new AccelerateDecelerateInterpolator());animator.addUpdateListener(a->{animatedScale=(float)a.getAnimatedValue();invalidate();});animator.addListener(new android.animation.AnimatorListenerAdapter(){@Override public void onAnimationEnd(android.animation.Animator a){playStepSound();runStep(player,piece,start,total,index+1,pips);}});animator.start();
+        float[] from=tokenPosition(player,piece);int next=start<0?0:start+index+1;tokens[player][piece]=next;float[] to=tokenPosition(player,piece);final float dx=from[0]-to[0],dy=from[1]-to[1];moveOffsetX=dx;moveOffsetY=dy;ValueAnimator animator=ValueAnimator.ofFloat(0f,1f);animator.setDuration(160);animator.setInterpolator(new android.view.animation.PathInterpolator(.22f,1f,.36f,1f));animator.addUpdateListener(a->{float f=(float)a.getAnimatedValue();moveOffsetX=dx*(1f-f);moveOffsetY=dy*(1f-f)-(float)Math.sin(Math.PI*f)*cell*.58f;animatedScale=f<.82f?1f+.06f*(float)Math.sin(Math.PI*f):1f-.12f*(1f-f)/.18f;invalidate();});animator.addListener(new android.animation.AnimatorListenerAdapter(){@Override public void onAnimationEnd(android.animation.Animator a){moveOffsetX=0;moveOffsetY=0;animatedScale=1f;playStepSound();runStep(player,piece,start,total,index+1,pips);}});animator.start();
     }
     private void finishMove(int player,int piece,int pips){int dest=tokens[player][piece];boolean captured=false;if(dest<52){int square=global(player,dest);if(!isSafe(square)){for(int q=0;q<players;q++)if(q!=player)for(int j=0;j<4;j++){int v=tokens[q][j];if(v>=0&&v<52&&global(q,v)==square){tokens[q][j]=-1;captures[player]++;captured=true;}}}}
-        boolean won=true;for(int v:tokens[player])if(v!=57)won=false;animating=false;movingPiece=-1;animatedScale=1f;
+        boolean won=true;for(int v:tokens[player])if(v!=57)won=false;animating=false;movingPiece=-1;animatedScale=1f;moveOffsetX=0;moveOffsetY=0;
         if(won){winner=true;message=names[player]+" WINS!";handler.removeCallbacks(countdown);}else if(pips==6||captured){turn=player;seconds=15;message=captured?"Captured! Roll again":"Six! Roll again";handler.removeCallbacks(countdown);handler.postDelayed(countdown,1000);}else{message="";nextTurn();}invalidate();
     }
     private void nextTurn(){dice=0;sixChain=0;turn=(turn+1)%players;seconds=15;handler.removeCallbacks(countdown);if(!paused&&!winner)handler.postDelayed(countdown,1000);}
