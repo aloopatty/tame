@@ -67,7 +67,7 @@ public class LudoView extends View {
         int[][] zone={{0,0},{0,9},{9,9},{9,0}};
         for(int i=0;i<4;i++){float l=x+zone[i][1]*cell,t=y+zone[i][0]*cell;fill(c,alpha(colors[i],95),l+cell*.08f,t+cell*.08f,l+cell*5.92f,t+cell*5.92f,cell*.28f);fill(c,Color.rgb(224,234,247),l+cell*.72f,t+cell*.72f,l+cell*5.28f,t+cell*5.28f,cell*.38f);
             for(int j=0;j<4;j++){float cx=l+cell*(1.8f+(j%2)*2.4f),cy=t+cell*(1.8f+(j/2)*2.4f);p.setColor(alpha(colors[i],65));c.drawCircle(cx,cy,cell*.68f,p);p.setColor(colors[i]);c.drawCircle(cx,cy,cell*.47f,p);p.setColor(Color.WHITE);c.drawCircle(cx-cell*.12f,cy-cell*.14f,cell*.12f,p);}}
-        for(int i=0;i<52;i++){float[] q=xy(path[i][0],path[i][1]);int col=Color.rgb(231,239,248);if(i==0)col=colors[0];if(i==13)col=colors[1];if(i==26)col=colors[2];if(i==39)col=colors[3];fill(c,col,q[0]-cell*.47f,q[1]-cell*.47f,q[0]+cell*.47f,q[1]+cell*.47f,cell*.07f);stroke(c,Color.rgb(172,192,214),dp(.5f),q[0]-cell*.47f,q[1]-cell*.47f,q[0]+cell*.47f,q[1]+cell*.47f,cell*.07f);if(isSafe(i))text(c,"★",q[0],q[1]+cell*.23f,cell*.58f,Color.rgb(171,123,32),true);}
+        for(int i=0;i<52;i++){float[] q=xy(path[i][0],path[i][1]);int col=Color.rgb(231,239,248);if(i==0)col=colors[0];if(i==13)col=colors[1];if(i==26)col=colors[2];if(i==39)col=colors[3];fill(c,col,q[0]-cell*.47f,q[1]-cell*.47f,q[0]+cell*.47f,q[1]+cell*.47f,cell*.07f);stroke(c,Color.argb(65,255,255,255),dp(.5f),q[0]-cell*.47f,q[1]-cell*.47f,q[0]+cell*.47f,q[1]+cell*.47f,cell*.07f);stroke(c,Color.argb(110,0,0,0),dp(.5f),q[0]-cell*.43f,q[1]-cell*.43f,q[0]+cell*.43f,q[1]+cell*.43f,cell*.05f);if(isSafe(i))text(c,"★",q[0],q[1]+cell*.23f,cell*.58f,Color.rgb(171,123,32),true);}
         for(int a=0;a<4;a++)for(int j=0;j<6;j++){float[] q=xy(lanes[a][j][0],lanes[a][j][1]);fill(c,alpha(colors[a],j==5?235:155),q[0]-cell*.47f,q[1]-cell*.47f,q[0]+cell*.47f,q[1]+cell*.47f,cell*.06f);}
         Path tri=new Path();float cx=x+7.5f*cell,cy=y+7.5f*cell;
         tri.moveTo(x+6*cell,y+6*cell);tri.lineTo(x+9*cell,y+6*cell);tri.lineTo(cx,cy);tri.close();p.setColor(colors[1]);c.drawPath(tri,p);
@@ -78,7 +78,7 @@ public class LudoView extends View {
     }
     private void drawTokens(Canvas c){for(int a=0;a<players;a++)for(int b=0;b<4;b++){float[] q=tokenPosition(a,b);int n=0,index=0;for(int k=0;k<players;k++)for(int j=0;j<4;j++){if(k==a&&j==b)index=n;if(tokens[k][j]>=0&&tokens[k][j]<57){float[] z=tokenPosition(k,j);if(Math.abs(z[0]-q[0])<1&&Math.abs(z[1]-q[1])<1)n++;}}
             float ox=0,oy=0;if(n>1){int cols=2;ox=((index%cols)-.5f)*cell*.34f;oy=((index/cols)-.5f)*cell*.34f;}
-            float r=cell*(n>1?.23f:.34f)*((animating&&a==turn&&b==movingPiece)?animatedScale:1f);float tx=q[0]+ox,ty=q[1]+oy;if(animating&&a==turn&&b==movingPiece){tx+=moveOffsetX;ty+=moveOffsetY;}
+            float r=cell*(n>1?.255f:.34f)*((animating&&a==turn&&b==movingPiece)?animatedScale:1f);float tx=q[0]+ox,ty=q[1]+oy;if(animating&&a==turn&&b==movingPiece){tx+=moveOffsetX;ty+=moveOffsetY;}
             p.setColor(alpha(Color.BLACK,110));c.drawCircle(tx+dp(1),ty+dp(2),r*1.12f,p);p.setColor(colors[a]);c.drawCircle(tx,ty,r,p);p.setColor(Color.WHITE);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(dp(1.5f));c.drawCircle(tx,ty,r,p);p.setStyle(Paint.Style.FILL);p.setColor(alpha(Color.WHITE,180));c.drawCircle(tx-r*.25f,ty-r*.28f,r*.22f,p);
             if(a==turn&&dice>0&&legal(a).contains(b)){p.setColor(Color.WHITE);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(dp(2));c.drawCircle(tx,ty,r*1.3f,p);p.setStyle(Paint.Style.FILL);}
         }}
