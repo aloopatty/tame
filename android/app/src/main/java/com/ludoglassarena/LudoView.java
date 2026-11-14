@@ -3,8 +3,6 @@ package com.ludoglassarena;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Camera;
-import android.graphics.Matrix;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
@@ -28,7 +26,7 @@ import java.util.List;
 import java.util.Random;
 
 public class LudoView extends View {
-    private final Paint p=new Paint(Paint.ANTI_ALIAS_FLAG); private final Camera diceCamera=new Camera(); private final Matrix diceMatrix=new Matrix();
+    private final Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Random random=new Random();
     private final Handler handler=new Handler(Looper.getMainLooper());
     private final int[] colors={Color.rgb(225,29,72),Color.rgb(16,185,129),Color.rgb(59,130,246),Color.rgb(245,158,11)};
@@ -125,7 +123,7 @@ public class LudoView extends View {
     private int homeCount(int player){int n=0;for(int v:tokens[player])if(v==57)n++;return n;}
     private String dieGlyph(int n){return String.valueOf(n);}
     private void drawDie(Canvas c,RectF r,int value,boolean active){
-        c.save();if(active&&rolling){diceCamera.save();diceCamera.rotateX(diceRotation*.91f);diceCamera.rotateY(diceRotation*1.13f);diceCamera.rotateZ(diceRotation*.24f);diceCamera.getMatrix(diceMatrix);diceCamera.restore();diceMatrix.preTranslate(-r.centerX(),-r.centerY());diceMatrix.postTranslate(r.centerX(),r.centerY());c.concat(diceMatrix);float bounce=(float)Math.abs(Math.sin(Math.toRadians(diceRotation*.5f)));c.translate(0,-dp(3)*bounce);c.scale(1f+.035f*bounce,1f+.035f*bounce,r.centerX(),r.centerY());}else if(!active){c.scale(.78f,.78f,r.centerX(),r.centerY());}else{c.scale(dicePulse,dicePulse,r.centerX(),r.centerY());}
+        c.save();if(active&&rolling){float rx=(float)Math.cos(Math.toRadians(diceRotation*.83f));float ry=(float)Math.cos(Math.toRadians(diceRotation*.67f));c.translate(r.centerX(),r.centerY());c.rotate(diceRotation);c.scale(Math.max(.14f,Math.abs(rx)),Math.max(.14f,Math.abs(ry)));c.translate(-r.centerX(),-r.centerY());}else if(!active){c.scale(.78f,.78f,r.centerX(),r.centerY());}else{c.scale(dicePulse,dicePulse,r.centerX(),r.centerY());}
         p.setStyle(Paint.Style.FILL);p.setColor(Color.BLACK);p.setShadowLayer(dp(5),0,dp(3),0x99000000);
         RectF d=new RectF(r.left+dp(2),r.top+dp(3),r.right-dp(2),r.bottom-dp(3));c.drawRoundRect(d,dp(8),dp(8),p);p.clearShadowLayer();
         p.setShader(new LinearGradient(d.left,d.top,d.right,d.bottom,active?Color.argb(245,255,255,255):Color.rgb(100,119,143),active?colors[turn]:Color.rgb(45,62,83),Shader.TileMode.CLAMP));c.drawRoundRect(d,dp(8),dp(8),p);p.setShader(null);
