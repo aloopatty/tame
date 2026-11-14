@@ -40,7 +40,7 @@ public class LudoView extends View {
     private RectF pauseRect=new RectF(),soundRect=new RectF(),rulesRect=new RectF();
     private float animatedScale=1f;
     private ToneGenerator tone;
-    private final Runnable countdown=new Runnable(){@Override public void run(){if(paused||winner||animating)return;seconds--;if(seconds<=0){if(dice!=0){dice=0;message="Time expired — turn passed";nextTurn();}else{message="Time expired — turn passed";nextTurn();}}invalidate();if(!paused&&!winner)handler.postDelayed(this,1000);}};
+    private final Runnable countdown=new Runnable(){@Override public void run(){if(paused||winner||animating)return;seconds--;if(seconds<=0){dice=0;message="Time expired — turn passed";nextTurn();invalidate();return;}invalidate();if(!paused&&!winner)handler.postDelayed(this,1000);}};
     public LudoView(Context context){super(context);setLayerType(View.LAYER_TYPE_SOFTWARE,null);try{tone=new ToneGenerator(AudioManager.STREAM_MUSIC,35);}catch(Exception ignored){}reset();}
     private float dp(float v){return v*getResources().getDisplayMetrics().density;}
     public void reset(){for(int a=0;a<4;a++){captures[a]=0;sixRolls[a]=0;for(int b=0;b<4;b++)tokens[a][b]=-1;}turn=0;dice=0;sixChain=0;seconds=15;paused=false;winner=false;animating=false;message="Roll a six to leave your base";handler.removeCallbacks(countdown);handler.postDelayed(countdown,1000);invalidate();}
