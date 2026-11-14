@@ -102,3 +102,28 @@
 
 .board{box-shadow:0 24px 60px #0009,0 0 26px color-mix(in srgb,var(--accent),transparent 91%),inset 0 1px 0 #ffffff26,inset 0 -4px 12px #0008}
 .cell.homepath.active-homepath{box-shadow:inset 0 0 9px color-mix(in srgb,var(--owner),transparent 28%),0 0 7px color-mix(in srgb,var(--owner),transparent 42%);border-color:color-mix(in srgb,var(--owner),white 28%)}
+
+
+/* Production refinement: isolated turns, crisp glass edges and ambient focus */
+.player-hud{border:1px solid rgba(255,255,255,.2);outline:1px solid rgba(0,0,0,.4);box-shadow:inset 0 0 0 1px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.1),0 9px 24px rgba(0,0,0,.38)}
+.player-hud.inactive{opacity:.78}
+.player-hud.inactive .roll-btn{opacity:.4;pointer-events:none;cursor:default;filter:grayscale(.65)}
+.player-hud.inactive .die-face{opacity:.4;filter:grayscale(.7)}
+.player-hud.active{animation:active-ambient 2.8s ease-in-out infinite}
+.player-hud.active .roll-btn{pointer-events:auto;opacity:1}
+@keyframes active-ambient{0%,100%{box-shadow:inset 0 0 0 1px rgba(0,0,0,.4),0 0 16px color-mix(in srgb,var(--accent),transparent 82%),0 9px 24px #0007}50%{box-shadow:inset 0 0 0 1px rgba(0,0,0,.4),0 0 31px color-mix(in srgb,var(--accent),transparent 66%),0 9px 24px #0007}}
+.roll-btn:disabled{pointer-events:none;cursor:default}
+.die-face{position:relative;overflow:visible;transform-style:preserve-3d;will-change:transform,filter;box-shadow:inset 0 1px 2px rgba(0,0,0,.5),inset 0 1px 2px #fff8,0 3px 9px #0009}
+.die-face.rolling{animation:cinematic-dice 600ms cubic-bezier(.18,.72,.2,1) both;filter:drop-shadow(0 0 7px #fff8)}
+.die-face.rolling:before,.die-face.rolling:after{content:attr(data-ghost);position:absolute;inset:0;display:grid;place-items:center;border-radius:inherit;color:#fff;opacity:.18;pointer-events:none;filter:blur(1px)}
+.die-face.rolling:before{transform:translate(-3px,1px) rotate(-8deg)}
+.die-face.rolling:after{transform:translate(3px,-1px) rotate(8deg);opacity:.12}
+@keyframes cinematic-dice{0%{transform:perspective(240px) rotateX(0) rotateY(0) rotateZ(0) scale(1)}24%{transform:perspective(240px) rotateX(260deg) rotateY(190deg) rotateZ(120deg) scale(1.22)}53%{transform:perspective(240px) rotateX(570deg) rotateY(430deg) rotateZ(250deg) scale(1.15)}78%{transform:perspective(240px) rotateX(790deg) rotateY(620deg) rotateZ(330deg) scale(.96)}100%{transform:perspective(240px) rotateX(900deg) rotateY(720deg) rotateZ(360deg) scale(1)}}
+.die-face.impact{animation:dice-impact 240ms cubic-bezier(.2,1.4,.4,1)}
+@keyframes dice-impact{0%{transform:translateY(0) scale(1)}35%{transform:translateY(2px) scale(1.12,.84);filter:brightness(1.5) drop-shadow(0 0 9px #fff)}70%{transform:translateY(-2px) scale(.96,1.08)}100%{transform:translateY(0) scale(1)}}
+.board,.player-hud,.base,.dialog{outline:1px solid rgba(0,0,0,.4)}
+.board{border-color:rgba(255,255,255,.2);box-shadow:0 24px 60px #0009,0 0 26px color-mix(in srgb,var(--accent),transparent 90%),inset 0 0 0 1px rgba(0,0,0,.4),inset 0 1px 0 #ffffff26,inset 0 -4px 12px #0008}
+.base{box-shadow:inset 0 0 0 1px rgba(0,0,0,.4),0 0 22px color-mix(in srgb,var(--base),transparent 80%),inset 0 2px 5px #0008}
+.token{will-change:transform,filter;backface-visibility:hidden}
+.token.moving{z-index:12;filter:drop-shadow(0 8px 7px #000b) drop-shadow(0 0 5px var(--token))}
+@media(prefers-reduced-motion:reduce){.player-hud.active{animation:none}}
