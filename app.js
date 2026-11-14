@@ -2,7 +2,7 @@
 const colors=['red','green','yellow','blue'],names=['RED','GREEN','YELLOW','BLUE'],accents=['#ff5969','#43d99a','#f4c95d','#62a9ff'];
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const track=[];for(let c=1;c<=6;c++)track.push([7,c]);for(let r=6;r>=1;r--)track.push([r,7]);for(let c=8;c<=9;c++)track.push([1,c]);for(let r=2;r<=6;r++)track.push([r,9]);for(let c=10;c<=15;c++)track.push([7,c]);for(let r=8;r<=9;r++)track.push([r,15]);for(let c=14;c>=10;c--)track.push([9,c]);for(let r=10;r<=15;r++)track.push([r,9]);for(let c=8;c>=7;c--)track.push([15,c]);for(let r=14;r>=10;r--)track.push([r,7]);for(let c=6;c>=1;c--)track.push([9,c]);track.push([8,1]);
-const starts=[0,13,26,39],safe=[0,8,13,21,26,34,39,47],homeCols=[[[8,1],[8,2],[8,3],[8,4],[8,5],[8,6]],[[1,8],[2,8],[3,8],[4,8],[5,8],[6,8]],[[8,14],[8,13],[8,12],[8,11],[8,10],[8,9]],[[14,8],[13,8],[12,8],[11,8],[10,8],[9,8]]];
+const starts=[0,13,26,39],safe=[0,8,13,21,26,34,39,47],homeCols=[[[8,2],[8,3],[8,4],[8,5],[8,6],[8,7]],[[2,8],[3,8],[4,8],[5,8],[6,8],[7,8]],[[8,14],[8,13],[8,12],[8,11],[8,10],[8,9]],[[14,8],[13,8],[12,8],[11,8],[10,8],[9,8]]];
 let state={count:4,turn:0,dice:0,rolled:false,sixChain:0,tokens:[],stats:[],seconds:15,paused:false,sound:true,over:false};
 const baseSpots=[[[3,3],[3,5],[5,3],[5,5]],[[3,11],[3,13],[5,11],[5,13]],[[11,11],[11,13],[13,11],[13,13]],[[11,3],[11,5],[13,3],[13,5]]];
 const key=(r,c)=>r+','+c;const sleep=ms=>new Promise(r=>setTimeout(r,ms));
