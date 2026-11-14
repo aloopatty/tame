@@ -31,7 +31,7 @@ async function move(i){if(!state.rolled||!validMoves().includes(i)||state.paused
 function endTurn(){state.rolled=false;state.dice=0;state.turn=(state.turn+1)%state.count;state.sixChain=0;tickReset();render()}
 function showDialog(content){$('#dialogContent').innerHTML=content;$('#overlay').classList.remove('hidden')}
 function hideDialog(){$('#overlay').classList.add('hidden')}
-$$('.roll-btn').forEach((b,p)=>b.addEventListener('click',()=>{if(p===state.turn)roll()}));
+$('.roll-btn').forEach(b=>b.addEventListener('click',()=>{let p=Number(b.closest('.player-hud').dataset.player);if(p===state.turn)roll()}));
 $('#board').addEventListener('click',e=>{let el=e.target.closest('.token');if(!el)return;let [p,i]=el.dataset.token.split('-').map(Number);if(p===state.turn&&validMoves().includes(i))move(i)});
 $('#soundBtn').onclick=()=>{state.sound=!state.sound;$('#soundBtn').textContent=state.sound?'♫':'♪'};
 $('#rulesBtn').onclick=()=>showDialog('<h2>HOW TO PLAY</h2><ul><li>Four local players share one device. Tap your corner die to roll.</li><li>Roll a six to release a token from base. A six grants another roll.</li><li>Move tokens clockwise. You need an exact roll to reach the center.</li><li>Land on an opponent on an unsafe square to capture it and earn another roll.</li><li>Star squares are safe. Three consecutive sixes forfeit your turn.</li><li>First player to bring all four tokens home wins.</li></ul><button class="primary" id="okRules">GOT IT</button>');$('#okRules').onclick=hideDialog;
