@@ -3,6 +3,8 @@ package com.ludoglassarena;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Camera;
+import android.graphics.Matrix;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
@@ -26,7 +28,7 @@ import java.util.List;
 import java.util.Random;
 
 public class LudoView extends View {
-    private final Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint p=new Paint(Paint.ANTI_ALIAS_FLAG); private final Camera diceCamera=new Camera(); private final Matrix diceMatrix=new Matrix();
     private final Random random=new Random();
     private final Handler handler=new Handler(Looper.getMainLooper());
     private final int[] colors={Color.rgb(225,29,72),Color.rgb(16,185,129),Color.rgb(59,130,246),Color.rgb(245,158,11)};
@@ -119,11 +121,11 @@ public class LudoView extends View {
         c.restore();}
         text(c,message,w/2,boardY+boardSize+dp(15),dp(9),Color.rgb(169,191,216),true);
     }
-    private void drawPathHighlights(Canvas c){long now=System.currentTimeMillis();for(int i=0;i<52;i++){if(trailExpiry[i]<=now)continue;float f=Math.min(1f,(trailExpiry[i]-now)/1150f);float[] q=xy(path[i][0],path[i][1]);int owner=trailOwner[i];if(owner<0)continue;p.setColor(Color.argb((int)(75*f),Color.red(colors[owner]),Color.green(colors[owner]),Color.blue(colors[owner])));p.setShadowLayer(dp(7),0,0,colors[owner]);c.drawRoundRect(q[0]-cell*.47f,q[1]-cell*.47f,q[0]+cell*.47f,q[1]+cell*.47f,cell*.12f,cell*.12f,p);p.clearShadowLayer();postInvalidateOnAnimation();}if(dice>0&&!animating){for(int piece:legal(turn)){int v=tokens[turn][piece],steps=v<0?1:dice;for(int k=0;k<steps;k++){int pos=v<0?k:v+k+1;if(pos>=52)break;int sq=global(turn,pos);float[] q=xy(path[sq][0],path[sq][1]);p.setColor(alpha(colors[turn],selectedPiece==piece?95:48));p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(dp(selectedPiece==piece?2.2f:1.2f));c.drawRoundRect(q[0]-cell*.43f,q[1]-cell*.43f,q[0]+cell*.43f,q[1]+cell*.43f,cell*.1f,cell*.1f,p);p.setStyle(Paint.Style.FILL);}}}}
+    private void drawPathHighlights(Canvas c){long now=System.currentTimeMillis();for(int i=0;i<52;i++){if(trailExpiry[i]<=now)continue;float f=Math.min(1f,(trailExpiry[i]-now)/1150f);float[] q=xy(path[i][0],path[i][1]);int owner=trailOwner[i];if(owner<0)continue;p.setColor(Color.argb((int)(75*f),Color.red(colors[owner]),Color.green(colors[owner]),Color.blue(colors[owner])));p.setShadowLayer(dp(7),0,0,colors[owner]);c.drawRoundRect(q[0]-cell*.47f,q[1]-cell*.47f,q[0]+cell*.47f,q[1]+cell*.47f,cell*.12f,cell*.12f,p);p.clearShadowLayer();postInvalidateOnAnimation();}if(dice>0&&!animating){for(int piece:legal(turn)){if(selectedPiece>=0&&piece!=selectedPiece)continue;int v=tokens[turn][piece],steps=v<0?1:dice;for(int k=0;k<steps;k++){int pos=v<0?k:v+k+1;float[] q;if(pos<52){int sq=global(turn,pos);q=xy(path[sq][0],path[sq][1]);}else if(pos<=56){q=xy(lanes[turn][pos-52][0],lanes[turn][pos-52][1]);}else continue;p.setColor(alpha(colors[turn],selectedPiece==piece?95:48));p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(dp(selectedPiece==piece?2.2f:1.2f));c.drawRoundRect(q[0]-cell*.43f,q[1]-cell*.43f,q[0]+cell*.43f,q[1]+cell*.43f,cell*.1f,cell*.1f,p);p.setStyle(Paint.Style.FILL);}}}}
     private int homeCount(int player){int n=0;for(int v:tokens[player])if(v==57)n++;return n;}
     private String dieGlyph(int n){return String.valueOf(n);}
     private void drawDie(Canvas c,RectF r,int value,boolean active){
-        c.save();if(active&&rolling){float rx=(float)Math.cos(Math.toRadians(diceRotation*.83f));float ry=(float)Math.cos(Math.toRadians(diceRotation*.67f));c.translate(r.centerX(),r.centerY());c.rotate(diceRotation);c.scale(Math.max(.14f,Math.abs(rx)),Math.max(.14f,Math.abs(ry)));c.translate(-r.centerX(),-r.centerY());}else if(!active){c.scale(.78f,.78f,r.centerX(),r.centerY());}else{c.scale(dicePulse,dicePulse,r.centerX(),r.centerY());}
+        c.save();if(active&&rolling){diceCamera.save();diceCamera.rotateX(diceRotation*.91f);diceCamera.rotateY(diceRotation*1.13f);diceCamera.rotateZ(diceRotation*.24f);diceCamera.getMatrix(diceMatrix);diceCamera.restore();diceMatrix.preTranslate(-r.centerX(),-r.centerY());diceMatrix.postTranslate(r.centerX(),r.centerY());c.concat(diceMatrix);float bounce=(float)Math.abs(Math.sin(Math.toRadians(diceRotation*.5f)));c.translate(0,-dp(3)*bounce);c.scale(1f+.035f*bounce,1f+.035f*bounce,r.centerX(),r.centerY());}else if(!active){c.scale(.78f,.78f,r.centerX(),r.centerY());}else{c.scale(dicePulse,dicePulse,r.centerX(),r.centerY());}
         p.setStyle(Paint.Style.FILL);p.setColor(Color.BLACK);p.setShadowLayer(dp(5),0,dp(3),0x99000000);
         RectF d=new RectF(r.left+dp(2),r.top+dp(3),r.right-dp(2),r.bottom-dp(3));c.drawRoundRect(d,dp(8),dp(8),p);p.clearShadowLayer();
         p.setShader(new LinearGradient(d.left,d.top,d.right,d.bottom,active?Color.argb(245,255,255,255):Color.rgb(100,119,143),active?colors[turn]:Color.rgb(45,62,83),Shader.TileMode.CLAMP));c.drawRoundRect(d,dp(8),dp(8),p);p.setShader(null);
